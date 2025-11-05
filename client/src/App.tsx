@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { fetchAllItems, createItem, deleteItem, type DataItem } from './api'
+import { fetchAllItems, createItem, deleteItem, type DataItem } from './api/api.ts'
 
 function App() {
   const [data, setData] = useState<DataItem[]>([])
