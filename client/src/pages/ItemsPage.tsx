@@ -1,0 +1,102 @@
+import { useState, useEffect } from 'react'
+import { fetchAllItems, createItem, deleteItem, type DataItem } from '../api/api'
+import ItemForm from '../components/ItemForm'
+import ItemList from '../components/ItemList'
+import Loader from '../components/Loader'
+
+export default function ItemsPage() {
+  const [data, setData] = useState<DataItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const result = await fetchAllItems()
+      setData(result)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (formData: { name: string; description: string }) => {
+    try {
+      setError(null)
+      await createItem(formData.name.trim(), formData.description.trim())
+      await fetchData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create item')
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this item?')) {
+      return
+    }
+    
+    try {
+      setDeletingId(id)
+      setError(null)
+      await deleteItem(id)
+      await fetchData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete item')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">
+          NTSuisse Demo
+        </h1>
+
+        {/* Add New Item Form */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            Add New Item
+          </h2>
+          <ItemForm onSubmit={handleSubmit} />
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+
+        {/* Data List */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            Data Items
+          </h2>
+          {loading ? (
+            <Loader />
+          ) : data.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No items found. Add one above!
+            </div>
+          ) : (
+            <ItemList 
+              data={data} 
+              onDelete={handleDelete}
+              deletingId={deletingId}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
