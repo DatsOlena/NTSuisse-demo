@@ -14,8 +14,10 @@ export default function Header({
   }
 
   return (
-    <header className="bg-color-primary sticky top-0 opacity-70 text-inverse px-6 py-3 flex justify-between items-center shadow-theme-md relative" style={{ zIndex: 100 }}>
-      <h1 className="text-xl font-semibold">Water analysis</h1>
+    <header className="bg-color-primary sticky top-0 text-inverse px-6 py-3 flex justify-between items-center shadow-theme-md relative" style={{ zIndex: 100 }}>
+      <a href="#" className="flex items-center gap-3" aria-label="WaterLab Home">
+        <img src="/logo/logoWaterLab.svg" alt="WaterLab Logo" className="h-10 md:h-12 lg:h-14 w-auto" />
+      </a>
       <div className="flex items-center gap-4">
         <nav className="flex gap-4">
           <button 
