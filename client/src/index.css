@@ -2,3 +2,217 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Brand Colors - Light Theme */
+  /* Primary */
+  --color-primary: #1F7285;
+  --color-primary-hover: #195e6b;
+  --color-primary-light: #D6EEF2;
+  --color-primary-dark: #164E59;
+  
+  /* Accent - Sky Blue */
+  --color-accent: #E6F0FA;
+  --color-accent-hover: #D0E0F5;
+  
+  /* Success - Green */
+  --color-success: #10B981;
+  --color-success-hover: #059669;
+  --color-success-light: #D1FAE5;
+  
+  /* Error - Soft Red */
+  --color-danger: #EF4444;
+  --color-danger-hover: #DC2626;
+  --color-danger-light: #FEE2E2;
+  
+  /* Warning */
+  --color-warning: #F59E0B;
+  --color-warning-hover: #D97706;
+  --color-warning-light: #FEF3C7;
+  
+  /* Info */
+  --color-info: #1F7285;
+  --color-info-hover: #195e6b;
+  --color-info-light: #D6EEF2;
+  
+  /* Secondary */
+  --color-secondary: #6B7280;
+  --color-secondary-hover: #4B5563;
+  --color-secondary-light: #F3F4F6;
+  
+  /* Background Colors */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F9FAFB;
+  --bg-tertiary: #F3F4F6;
+  --bg-accent: #E6F0FA;
+  
+  /* Text Colors */
+  --text-primary: #1F2933;
+  --text-secondary: #4B5563;
+  --text-tertiary: #9CA3AF;
+  --text-inverse: #FFFFFF;
+  
+  /* Border Colors */
+  --border-primary: #E5E7EB;
+  --border-secondary: #D1D5DB;
+  --border-focus: #1F7285;
+  
+  /* Shadow */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+[data-theme="dark"] {
+  /* Dark Theme */
+  /* Primary */
+  --color-primary: #2AA0B4;
+  --color-primary-hover: #1F7285;
+  --color-primary-light: #195e6b;
+  --color-primary-dark: #0f3a43;
+  
+  /* Accent */
+  --color-accent: #195e6b;
+  --color-accent-hover: #2b6f7c;
+  
+  /* Success - Green */
+  --color-success: #10B981;
+  --color-success-hover: #059669;
+  --color-success-light: #065F46;
+  
+  /* Error - Soft Red */
+  --color-danger: #EF4444;
+  --color-danger-hover: #DC2626;
+  --color-danger-light: #991B1B;
+  
+  /* Warning */
+  --color-warning: #F59E0B;
+  --color-warning-hover: #D97706;
+  --color-warning-light: #92400E;
+  
+  /* Info */
+  --color-info: #2AA0B4;
+  --color-info-hover: #1F7285;
+  --color-info-light: #195e6b;
+  
+  /* Secondary */
+  --color-secondary: #94A3B8;
+  --color-secondary-hover: #64748B;
+  --color-secondary-light: #334155;
+  
+  /* Background Colors */
+  --bg-primary: #1F2937;
+  --bg-secondary: #111827;
+  --bg-tertiary: #374151;
+  --bg-accent: #195e6b;
+  
+  /* Text Colors */
+  --text-primary: #F9FAFB;
+  --text-secondary: #D1D5DB;
+  --text-tertiary: #9CA3AF;
+  --text-inverse: #1F2933;
+  
+  /* Border Colors */
+  --border-primary: #374151;
+  --border-secondary: #4B5563;
+  --border-focus: #2AA0B4;
+  
+  /* Shadow */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+}
+
+/* Utility classes for using CSS variables */
+
+/* Background Colors */
+.bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.bg-tertiary {
+  background-color: var(--bg-tertiary);
+}
+
+.bg-accent {
+  background-color: var(--bg-accent);
+}
+
+/* Text Colors */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+
+.text-inverse {
+  color: var(--text-inverse);
+}
+
+/* Border Colors */
+.border-primary {
+  border-color: var(--border-primary);
+}
+
+.border-secondary {
+  border-color: var(--border-secondary);
+}
+
+.border-focus {
+  border-color: var(--border-focus);
+}
+
+/* Theme Colors */
+.color-primary {
+  color: var(--color-primary);
+}
+
+.bg-color-primary {
+  background-color: var(--color-primary);
+}
+
+.bg-color-primary-hover:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.bg-color-primary-light {
+  background-color: var(--color-primary-light);
+}
+
+.color-success {
+  color: var(--color-success);
+}
+
+.bg-color-success {
+  background-color: var(--color-success);
+}
+
+.color-danger {
+  color: var(--color-danger);
+}
+
+.bg-color-danger {
+  background-color: var(--color-danger);
+}
+
+/* Shadows */
+.shadow-theme-sm {
+  box-shadow: var(--shadow-sm);
+}
+
+.shadow-theme-md {
+  box-shadow: var(--shadow-md);
+}
+
+.shadow-theme-lg {
+  box-shadow: var(--shadow-lg);
+}
