@@ -4,3 +4,4 @@ station_id,station_name,water_body,canton,timestamp,water_level_cm,discharge_m3s
 2155,Thun / Aare,Aare,BE,2025-11-08T17:45:00Z,410,220.8,6.8
 2325,Luzern / Reuss,Reuss,LU,2025-11-08T17:45:00Z,298,135.6,7.9
 2409,Basel / Rhein,Rhein,BS,2025-11-08T17:45:00Z,420,610.4,9.3
+2106,Birs / Hofmatt,Birs,BS,2025-11-08T17:45:00Z,248,41.2,7.4
