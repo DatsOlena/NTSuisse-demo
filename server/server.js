@@ -1,3 +1,12 @@
+/**
+ * WaterLab /  Demo Server
+ * --------------------------------
+ * Hybrid backend combining:
+ *  - Basel Open Data JSON (Socrata API)
+ *  - Local CSV snapshot fallback (for offline mode)
+ *  - (Disabled) FOEN API integration (reactivate when JSON access is restored)
+ * Provides a unified REST API for the React frontend to visualize Swiss water metrics.
+ */
 import express from 'express';
 import cors from 'cors';
 import initSqlJs from 'sql.js';
@@ -27,6 +36,19 @@ const DEFAULT_STATIONS = [
   { id: '2325', name: 'Luzern / Reuss' },
   { id: '2409', name: 'Basel / Rhein' },
 ];
+
+const SOCRATA_SOURCES = {
+  '2106': {
+    stationId: '2106',
+    name: 'Birs / Hofmatt',
+    waterBody: 'Birs',
+    canton: 'BS',
+    url: 'https://data.bs.ch/api/v2/catalog/datasets/100236/records?limit=100',
+  },
+};
+
+const socrataCache = new Map();
+const SOCRATA_CACHE_MAX_AGE = 5 * 60 * 1000; // 5 minutes
 
 const LOCAL_WATER_DATA_PATH = join(__dirname, 'data', 'water_latest.csv');
 let localWaterDataCache = null;
@@ -93,23 +115,40 @@ function loadLocalWaterData() {
   }
 }
 
-function getLocalStationList() {
-  const dataset = loadLocalWaterData();
-  if (!dataset.length) {
-    return DEFAULT_STATIONS;
-  }
+function getStationList() {
+  const stationsById = new Map();
 
-  const seen = new Set();
-  const stations = [];
-  for (const entry of dataset) {
+  DEFAULT_STATIONS.forEach((station) => {
+    stationsById.set(station.id, {
+      id: station.id,
+      name: station.name,
+      source: 'default',
+    });
+  });
+
+  Object.values(SOCRATA_SOURCES).forEach((source) => {
+    stationsById.set(source.stationId, {
+      id: source.stationId,
+      name: source.name,
+      source: 'opendata.bs.ch',
+    });
+  });
+
+  const dataset = loadLocalWaterData();
+  dataset.forEach((entry) => {
     const id = entry.station_id;
-    if (!id || seen.has(id)) {
-      continue;
+    if (!id) {
+      return;
     }
-    seen.add(id);
-    stations.push({ id, name: entry.station_name || id });
-  }
-  return stations.length ? stations : DEFAULT_STATIONS;
+    const existing = stationsById.get(id);
+    stationsById.set(id, {
+      id,
+      name: entry.station_name || existing?.name || id,
+      source: existing?.source ?? 'local-snapshot',
+    });
+  });
+
+  return Array.from(stationsById.values());
 }
 
 function getLocalStationData(stationId) {
@@ -157,6 +196,150 @@ function getLocalStationData(stationId) {
     measurements,
     raw: entry,
   };
+}
+
+function parseTimestamp(value) {
+  if (!value) {
+    return null;
+  }
+
+  const candidates = [String(value), String(value).replace(' ', 'T'), String(value).replace(/\./g, '-'), String(value).replace(/\./g, '-').replace(' ', 'T')];
+  for (const candidate of candidates) {
+    const trimmed = candidate.trim();
+    if (!trimmed) {
+      continue;
+    }
+    const parsed = new Date(trimmed);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+  return null;
+}
+
+function getFieldByKeywords(record, keywords) {
+  if (!record) {
+    return undefined;
+  }
+  const entries = Object.entries(record);
+  const match = entries.find(([key]) => {
+    const lowerKey = key.toLowerCase();
+    return keywords.some((keyword) => lowerKey.includes(keyword));
+  });
+  return match ? match[1] : undefined;
+}
+
+async function fetchSocrataStationData(stationId) {
+  const source = SOCRATA_SOURCES[stationId];
+  if (!source) {
+    return null;
+  }
+
+  const cached = socrataCache.get(stationId);
+  if (cached && Date.now() - cached.loadedAt < SOCRATA_CACHE_MAX_AGE) {
+    return cached.data;
+  }
+
+  const response = await fetch(source.url, {
+    headers: {
+      Accept: 'application/json',
+      'user-agent': 'WaterLab Demo / ntsuisse (contact: demo@example.com)',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Socrata endpoint responded with ${response.status}`);
+  }
+
+  const body = await response.json();
+  const records = body?.records;
+  if (!Array.isArray(records)) {
+    throw new Error('Unexpected Socrata JSON format');
+  }
+  if (!records.length) {
+    throw new Error('Socrata dataset returned no records');
+  }
+
+  let latestFields = null;
+  let latestTimestamp = null;
+
+  records.forEach((item) => {
+    const fields = item?.record?.fields || {};
+    const ts = parseTimestamp(
+      getFieldByKeywords(fields, ['zeit', 'timestamp', 'datum', 'time'])
+    );
+
+    if (!latestFields || (ts && (!latestTimestamp || ts > latestTimestamp))) {
+      latestFields = fields;
+      latestTimestamp = ts;
+    }
+  });
+
+  if (!latestFields) {
+    throw new Error('Socrata dataset did not include parsable timestamps');
+  }
+
+  const temperature = toNumber(
+    getFieldByKeywords(latestFields, ['temperatur', 'temperature', 'temp'])
+  );
+  const discharge = toNumber(
+    getFieldByKeywords(latestFields, ['abfluss', 'durchfluss', 'discharge', 'fluss'])
+  );
+  const waterLevel = toNumber(
+    getFieldByKeywords(latestFields, ['wasserstand', 'pegel', 'level'])
+  );
+  const waterBody = getFieldByKeywords(latestFields, ['gewässer', 'gewaesser', 'fluss', 'river']);
+  const stationName = getFieldByKeywords(latestFields, ['station', 'standort', 'messstelle', 'site']);
+  const canton = getFieldByKeywords(latestFields, ['kanton', 'canton']);
+
+  const measurements = [
+    {
+      id: `${stationId}-temperature`,
+      label: 'Water Temperature',
+      shortName: 'temperature',
+      unit: '°C',
+      value: temperature,
+      timestamp: latestTimestamp ? latestTimestamp.toISOString() : null,
+    },
+    {
+      id: `${stationId}-discharge`,
+      label: 'Discharge',
+      shortName: 'discharge',
+      unit: 'm³/s',
+      value: discharge,
+      timestamp: latestTimestamp ? latestTimestamp.toISOString() : null,
+    },
+    {
+      id: `${stationId}-water-level`,
+      label: 'Water Level',
+      shortName: 'water_level',
+      unit: 'cm',
+      value: waterLevel,
+      timestamp: latestTimestamp ? latestTimestamp.toISOString() : null,
+    },
+  ].filter((measurement) => measurement.value !== null);
+
+  const payload = {
+    station: {
+      id: source.stationId,
+      name: stationName || source.name,
+      waterBody: waterBody || source.waterBody || null,
+      canton: canton || source.canton || null,
+      coordinates: null,
+    },
+    measurements,
+    raw: latestFields,
+  };
+
+  socrataCache.set(stationId, { data: payload, loadedAt: Date.now() });
+  return payload;
+}
+
+function withSource(payload, source) {
+  if (!payload) {
+    return null;
+  }
+  return { ...payload, source };
 }
 
 async function fetchStationData(stationId) {
@@ -210,20 +393,32 @@ async function fetchStationData(stationId) {
 }
 
 app.get('/api/water/stations', (req, res) => {
-  const stations = getLocalStationList();
+  const stations = getStationList();
   res.json(stations);
 });
 
 app.get('/api/water/stations/:id', async (req, res) => {
   const { id } = req.params;
 
+  // Temporarily skip FOEN API calls while access is blocked.
+  // try {
+  //   const foenData = await fetchStationData(id);
+  //   if (foenData && foenData.measurements && foenData.measurements.length) {
+  //     return res.json(withSource(foenData, 'foen'));
+  //   }
+  // } catch (error) {
+  //   console.warn(`FOEN API unavailable for station ${id}:`, error.message);
+  // }
+
   try {
-    const foenData = await fetchStationData(id);
-    if (foenData && foenData.measurements && foenData.measurements.length) {
-      return res.json(foenData);
+    const socrataData = await fetchSocrataStationData(id);
+    if (socrataData && socrataData.measurements && socrataData.measurements.length) {
+      const payload = withSource(socrataData, 'opendata.bs.ch');
+      console.log(`✅ Responding with ${payload.source} for station ${id}`);
+      return res.json(payload);
     }
   } catch (error) {
-    console.warn(`FOEN API unavailable for station ${id}:`, error.message);
+    console.warn(`Socrata source unavailable for station ${id}:`, error.message);
   }
 
   const localData = getLocalStationData(id);
@@ -231,7 +426,9 @@ app.get('/api/water/stations/:id', async (req, res) => {
     return res.status(404).json({ error: 'Station not found in local dataset' });
   }
 
-  return res.json(localData);
+  const fallbackPayload = withSource(localData, 'local-snapshot');
+  console.log(`✅ Responding with ${fallbackPayload.source} for station ${id}`);
+  return res.json(fallbackPayload);
 });
 
 // Database setup
