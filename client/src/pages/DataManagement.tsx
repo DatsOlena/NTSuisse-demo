@@ -4,7 +4,7 @@ import ItemForm from '../components/ItemForm'
 import ItemList from '../components/ItemList'
 import Loader from '../components/Loader'
 
-export default function ItemsPage() {
+export default function DataManagement() {
   const [data, setData] = useState<DataItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -41,7 +41,7 @@ export default function ItemsPage() {
     if (!confirm('Are you sure you want to delete this item?')) {
       return
     }
-    
+
     try {
       setDeletingId(id)
       setError(null)
@@ -58,10 +58,9 @@ export default function ItemsPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">
-          NTSuisse Demo
+          Data Management
         </h1>
 
-        {/* Add New Item Form */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">
             Add New Item
@@ -69,14 +68,12 @@ export default function ItemsPage() {
           <ItemForm onSubmit={handleSubmit} />
         </div>
 
-        {/* Error Message */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )}
 
-        {/* Data List */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">
             Data Items
@@ -88,8 +85,8 @@ export default function ItemsPage() {
               No items found. Add one above!
             </div>
           ) : (
-            <ItemList 
-              data={data} 
+            <ItemList
+              data={data}
               onDelete={handleDelete}
               deletingId={deletingId}
             />
@@ -99,4 +96,3 @@ export default function ItemsPage() {
     </div>
   )
 }
-

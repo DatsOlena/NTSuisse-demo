@@ -1,17 +1,22 @@
-import { useState } from 'react'
 import Header from './components/Header'
 import Footer from './components/Footer'
-import ItemsPage from './pages/ItemsPage'
 import About from './pages/About'
+import Dashboard from './pages/Dashboard'
+import DataManagement from './pages/DataManagement'
+import { Routes, Route } from 'react-router-dom'
+
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<'dashboard' | 'about'>('about')
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header onNavigate={setCurrentPage} currentPage={currentPage} />
+      <Header />
       <main className="flex-1">
-        {currentPage === 'dashboard' ? <ItemsPage /> : <About />}
+        <Routes>
+          <Route path="/" element={<About />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/data" element={<DataManagement />} />
+        </Routes>
       </main>
       <Footer />
     </div>
