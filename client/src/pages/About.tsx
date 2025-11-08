@@ -24,8 +24,8 @@ export default function About() {
 
       {/* Body content */}
       <main className="relative z-10">
-        <div className="max-w-5xl mx-auto p-6">
-          <div className="bg-primary bg-opacity-90 rounded-lg shadow-theme-lg p-6 mb-6 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto p-6">
+          <div className="p-6 mb-6 backdrop-blur-sm">
             <h2 className="text-xl font-semibold text-primary mb-3">Project Overview</h2>
             <p className="text-secondary mb-4">
               This is a full-stack CRUD demo application built with modern web technologies,
@@ -38,7 +38,7 @@ export default function About() {
             </p>
           </div>
 
-          <div className="bg-primary bg-opacity-90 rounded-lg shadow-theme-lg p-6 backdrop-blur-sm">
+          <div className="bg-primary max-w-2xl mx-auto bg-opacity-90 rounded-lg shadow-theme-lg p-6 backdrop-blur-sm">
             <h2 className="text-xl font-semibold text-primary mb-3">Technologies Used</h2>
             <ul className="list-disc list-inside space-y-2 text-secondary">
               <li><strong>Frontend:</strong> React 18, TypeScript, Tailwind CSS</li>
