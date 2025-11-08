@@ -1,0 +1,6 @@
+station_id,station_name,water_body,canton,timestamp,water_level_cm,discharge_m3s,temperature_c
+2061,Zürich / Limmat,Limmat,ZH,2025-11-08T17:45:00Z,352,95.4,8.7
+2141,Bern / Aare,Aare,BE,2025-11-08T17:45:00Z,275,180.2,7.1
+2155,Thun / Aare,Aare,BE,2025-11-08T17:45:00Z,410,220.8,6.8
+2325,Luzern / Reuss,Reuss,LU,2025-11-08T17:45:00Z,298,135.6,7.9
+2409,Basel / Rhein,Rhein,BS,2025-11-08T17:45:00Z,420,610.4,9.3

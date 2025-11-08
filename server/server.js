@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import initSqlJs from 'sql.js';
+import fetch from 'node-fetch';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
@@ -17,6 +18,221 @@ const PORT = process.env.PORT || 5001;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// FOEN water data configuration
+const DEFAULT_STATIONS = [
+  { id: '2061', name: 'Zürich / Limmat' },
+  { id: '2141', name: 'Bern / Aare' },
+  { id: '2155', name: 'Thun / Aare' },
+  { id: '2325', name: 'Luzern / Reuss' },
+  { id: '2409', name: 'Basel / Rhein' },
+];
+
+const LOCAL_WATER_DATA_PATH = join(__dirname, 'data', 'water_latest.csv');
+let localWaterDataCache = null;
+let localWaterDataLoadedAt = 0;
+const LOCAL_WATER_DATA_MAX_AGE = 15 * 60 * 1000; // 15 minutes
+
+function toNumber(value) {
+  if (value === undefined || value === null) return null;
+  const trimmed = String(value).trim();
+  if (!trimmed) return null;
+  const num = Number(trimmed.replace(',', '.'));
+  return Number.isFinite(num) ? num : null;
+}
+
+function loadLocalWaterData() {
+  try {
+    if (
+      localWaterDataCache &&
+      Date.now() - localWaterDataLoadedAt < LOCAL_WATER_DATA_MAX_AGE
+    ) {
+      return localWaterDataCache;
+    }
+
+    if (!existsSync(LOCAL_WATER_DATA_PATH)) {
+      console.warn('Local water dataset not found at', LOCAL_WATER_DATA_PATH);
+      localWaterDataCache = [];
+      localWaterDataLoadedAt = Date.now();
+      return localWaterDataCache;
+    }
+
+    const csv = readFileSync(LOCAL_WATER_DATA_PATH, 'utf-8');
+    const lines = csv
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    if (lines.length <= 1) {
+      localWaterDataCache = [];
+      localWaterDataLoadedAt = Date.now();
+      return localWaterDataCache;
+    }
+
+    const headers = lines.shift().split(',').map((header) => header.trim());
+    const records = lines.map((line) => {
+      const columns = line.split(',');
+      const record = {};
+      headers.forEach((header, index) => {
+        record[header] = columns[index]?.trim() ?? '';
+      });
+      record.temperature_c = toNumber(record.temperature_c);
+      record.discharge_m3s = toNumber(record.discharge_m3s);
+      record.water_level_cm = toNumber(record.water_level_cm);
+      return record;
+    });
+
+    localWaterDataCache = records;
+    localWaterDataLoadedAt = Date.now();
+    return localWaterDataCache;
+  } catch (error) {
+    console.error('Failed to load local water dataset:', error);
+    localWaterDataCache = [];
+    localWaterDataLoadedAt = Date.now();
+    return localWaterDataCache;
+  }
+}
+
+function getLocalStationList() {
+  const dataset = loadLocalWaterData();
+  if (!dataset.length) {
+    return DEFAULT_STATIONS;
+  }
+
+  const seen = new Set();
+  const stations = [];
+  for (const entry of dataset) {
+    const id = entry.station_id;
+    if (!id || seen.has(id)) {
+      continue;
+    }
+    seen.add(id);
+    stations.push({ id, name: entry.station_name || id });
+  }
+  return stations.length ? stations : DEFAULT_STATIONS;
+}
+
+function getLocalStationData(stationId) {
+  const dataset = loadLocalWaterData();
+  const entry = dataset.find((row) => row.station_id === stationId);
+  if (!entry) {
+    return null;
+  }
+
+  const measurements = [
+    {
+      id: `${stationId}-temperature`,
+      label: 'Water Temperature',
+      shortName: 'temperature',
+      unit: '°C',
+      value: entry.temperature_c,
+      timestamp: entry.timestamp || null,
+    },
+    {
+      id: `${stationId}-discharge`,
+      label: 'Discharge',
+      shortName: 'discharge',
+      unit: 'm³/s',
+      value: entry.discharge_m3s,
+      timestamp: entry.timestamp || null,
+    },
+    {
+      id: `${stationId}-water-level`,
+      label: 'Water Level',
+      shortName: 'water_level',
+      unit: 'cm',
+      value: entry.water_level_cm,
+      timestamp: entry.timestamp || null,
+    },
+  ].filter((measurement) => measurement.value !== null);
+
+  return {
+    station: {
+      id: stationId,
+      name: entry.station_name || stationId,
+      waterBody: entry.water_body || null,
+      canton: entry.canton || null,
+      coordinates: null,
+    },
+    measurements,
+    raw: entry,
+  };
+}
+
+async function fetchStationData(stationId) {
+  const foenUrl = `https://www.hydrodaten.admin.ch/lhg/sdi/api/station/${stationId}`;
+  const response = await fetch(foenUrl, {
+    headers: {
+      Accept: 'application/json',
+      'user-agent': 'WaterLab Demo / ntsuisse (contact: demo@example.com)',
+    },
+  });
+
+  const rawBody = await response.text();
+  if (!response.ok) {
+    throw new Error(`FOEN API responded with ${response.status}. Body: ${rawBody.slice(0, 400)}`);
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    throw new Error(`FOEN API returned unexpected content-type (${contentType}). Body: ${rawBody.slice(0, 400)}`);
+  }
+
+  const parsed = JSON.parse(rawBody);
+  const payload = Array.isArray(parsed) ? parsed[0] : parsed;
+  const station = payload?.station ?? {};
+  const timeseries = Array.isArray(payload?.timeseries) ? payload.timeseries : [];
+
+  const measurements = timeseries.map((series) => {
+    const parameter = series?.parameter ?? {};
+    const current = series?.currentMeasurement ?? {};
+    return {
+      id: series?.id ?? null,
+      label: parameter?.name ?? parameter?.shortName ?? 'Measurement',
+      shortName: parameter?.shortName ?? null,
+      unit: series?.unit ?? current?.unit ?? parameter?.unit ?? null,
+      value: typeof current?.value === 'number' ? current.value : toNumber(current?.value),
+      timestamp: current?.timestamp ?? null,
+    };
+  });
+
+  return {
+    station: {
+      id: station?.id ?? stationId,
+      name: station?.name ?? 'Unknown station',
+      waterBody: station?.waterBody?.name ?? station?.waterBody?.waterBodyName ?? null,
+      canton: station?.canton ?? null,
+      coordinates: station?.coordinates ?? null,
+    },
+    measurements,
+    raw: payload,
+  };
+}
+
+app.get('/api/water/stations', (req, res) => {
+  const stations = getLocalStationList();
+  res.json(stations);
+});
+
+app.get('/api/water/stations/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const foenData = await fetchStationData(id);
+    if (foenData && foenData.measurements && foenData.measurements.length) {
+      return res.json(foenData);
+    }
+  } catch (error) {
+    console.warn(`FOEN API unavailable for station ${id}:`, error.message);
+  }
+
+  const localData = getLocalStationData(id);
+  if (!localData) {
+    return res.status(404).json({ error: 'Station not found in local dataset' });
+  }
+
+  return res.json(localData);
+});
 
 // Database setup
 let db;
