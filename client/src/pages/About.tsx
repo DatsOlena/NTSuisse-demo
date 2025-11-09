@@ -23,7 +23,7 @@ export default function About() {
       </section>
 
       {/* Body content */}
-      <main className="relative z-10">
+      <main className="relative z-10 bg-secondary">
         <div className="max-w-7xl mx-auto p-6 space-y-10">
           <div className="p-6 mb-6 backdrop-blur-sm">
             <h2 className="text-2xl font-bold mb-4 color-primary">Project Overview</h2>

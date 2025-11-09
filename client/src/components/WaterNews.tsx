@@ -76,7 +76,7 @@ export default function WaterNews() {
               href={article.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="block bg-white rounded-xl shadow-theme-md hover:shadow-theme-lg transition-shadow duration-200 overflow-hidden"
+              className="block bg-primary rounded-xl shadow-theme-md hover:shadow-theme-lg transition-shadow duration-200 overflow-hidden"
             >
               <div className="h-64 w-full overflow-hidden bg-slate-100">
                 <img

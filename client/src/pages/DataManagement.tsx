@@ -55,14 +55,14 @@ export default function DataManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8 bg-secondary">
       <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold color-primary text-gray-900 mb-8">
+        <h1 className="text-3xl font-bold color-primary mb-8">
           Data Management
         </h1>
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+        <div className="bg-primary rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-semibold color-primary mb-4">
             Add New Item
           </h2>
           <ItemForm onSubmit={handleSubmit} />
@@ -74,14 +74,14 @@ export default function DataManagement() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+          <div className="bg-primary rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold color-primary mb-4">
             Data Items
           </h2>
           {loading ? (
             <Loader />
           ) : data.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 color-secondary bg-primary">
               No items found. Add one above!
             </div>
           ) : (

@@ -73,7 +73,7 @@ export default function Dashboard() {
   }, [stationData])
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50 py-12 bg-secondary">
       <div className="max-w-6xl mx-auto px-6 space-y-12">
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -96,7 +96,7 @@ export default function Dashboard() {
               id="station"
               value={selectedStation}
               onChange={(event) => setSelectedStation(event.target.value)}
-              className="border border-secondary rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-color-info"
+              className="border bg-primary text-secondary border-secondary rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-color-info"
             >
               {stations.map((station) => (
                 <option key={station.id} value={station.id}>
@@ -121,7 +121,7 @@ export default function Dashboard() {
           <>
             <section className="grid gap-6 md:grid-cols-3">
               {summaryMeasurements.map((measurement) => (
-                <div key={measurement.id ?? measurement.label} className="bg-white rounded-xl shadow-theme-md p-6">
+                <div key={measurement.id ?? measurement.label} className="bg-primary rounded-xl shadow-theme-md p-6">
                   <h2 className="text-sm uppercase text-secondary tracking-wide mb-2">
                     {measurement.label}
                   </h2>
@@ -138,7 +138,7 @@ export default function Dashboard() {
               ))}
             </section>
 
-            <section className="bg-white rounded-xl shadow-theme-lg p-8">
+            <section className="bg-primary rounded-xl shadow-theme-lg p-8">
               <h3 className="text-xl font-semibold text-primary mb-4">
                 Station details
               </h3>

@@ -8,10 +8,10 @@ export default function ItemCard({
   isDeleting?: boolean;
 }) {
   return (
-    <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+    <div className="border bg-primary rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">
+          <h3 className="text-lg font-semibold color-primary mb-1">
             {item.name}
           </h3>
           <p className="text-gray-600 mb-2">{item.description}</p>
