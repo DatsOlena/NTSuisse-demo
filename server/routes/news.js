@@ -1,3 +1,4 @@
+// RSS-driven news aggregation router. Serves /api/news with cached headlines.
 import { Router } from 'express'
 import RSSParser from 'rss-parser'
 
