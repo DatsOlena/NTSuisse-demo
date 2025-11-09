@@ -1,5 +1,5 @@
 /**
- * WaterLab /  Demo Server
+ * WaterLab / Water Data Demo Server
  * --------------------------------
  * Hybrid backend combining:
  *  - Basel Open Data JSON (Socrata API)
