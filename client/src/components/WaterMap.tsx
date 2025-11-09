@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { LatLngExpression } from 'leaflet'
 import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet'
 import Loader from './Loader'
 import { fetchStationData, fetchStations, StationDataResponse, StationSummary } from '../api/waterData'
@@ -33,7 +34,7 @@ interface MapStation {
   source?: string
 }
 
-const SWISS_CENTER: [number, number] = [46.8, 8.2]
+const SWISS_CENTER: LatLngExpression = [46.8, 8.2]
 const FALLBACK_STATIONS: StationSummary[] = [
   { id: '2061', name: 'Zürich / Limmat' },
   { id: '2141', name: 'Bern / Aare' },
@@ -104,28 +105,29 @@ export default function WaterMap() {
 
         const measurementMap = new Map<string, StationDataResponse | null>(measurementsEntries)
 
-        const combinedStations: MapStation[] = geojson.features
-          .map((feature) => {
-            const stationId = feature.properties.id
-            if (!stationId || feature.geometry.type !== 'Point') {
-              return null
-            }
+        const combinedStations = geojson.features.reduce<MapStation[]>((acc, feature) => {
+          const stationId = feature.properties.id
+          if (!stationId || feature.geometry.type !== 'Point') {
+            return acc
+          }
 
-            const measurement = measurementMap.get(stationId) || null
-            const [lon, lat] = feature.geometry.coordinates
+          const measurement = measurementMap.get(stationId) || null
+          const [lon, lat] = feature.geometry.coordinates as [number, number]
+          const measurementList: StationDataResponse['measurements'] =
+            measurement?.measurements ?? ([] as StationDataResponse['measurements'])
 
-            return {
-              id: stationId,
-              name: feature.properties.name || measurement?.station.name || stationId,
-              lat,
-              lon,
-              river: feature.properties.river || (measurement?.station.waterBody ?? undefined),
-              canton: feature.properties.canton || (measurement?.station.canton ?? undefined),
-              measurements: measurement?.measurements || [],
-              source: measurement?.source,
-            }
+          acc.push({
+            id: stationId,
+            name: feature.properties.name || measurement?.station.name || stationId,
+            lat,
+            lon,
+            river: feature.properties.river || (measurement?.station.waterBody ?? undefined),
+            canton: feature.properties.canton || (measurement?.station.canton ?? undefined),
+            measurements: measurementList,
+            source: measurement?.source ?? undefined,
           })
-          .filter((station): station is MapStation => station !== null)
+          return acc
+        }, [])
 
         setMapStations(combinedStations)
       } catch (err) {
@@ -177,15 +179,16 @@ export default function WaterMap() {
           const discharge = findMeasurement(station.measurements, ['discharge', 'durchfluss', 'abfluss'])
           const waterLevel = findMeasurement(station.measurements, ['water level', 'wasserstand', 'pegel', 'level'])
           const sourceLabel = station.source ? sourceLabels[station.source] ?? station.source : 'Unknown source'
+          const markerPosition: LatLngExpression = [station.lat, station.lon]
 
           return (
             <CircleMarker
               key={station.id}
-              center={[station.lat, station.lon]}
+              center={markerPosition}
               radius={10}
               pathOptions={{ color: temperatureColor(temperature?.value ?? null), fillOpacity: 0.8 }}
             >
-              <Tooltip direction="top" offset={[0, -6]} opacity={1} className="tooltip-custom">
+              <Tooltip direction="top" offset={[0, -6] as [number, number]} opacity={1} className="tooltip-custom">
                 <div className="space-y-1">
                   <p className="font-semibold text-sm">{station.name}</p>
                   {station.river && (
