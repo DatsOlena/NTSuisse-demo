@@ -10,7 +10,7 @@ export default function ItemList({
   deletingId?: number | null;
 }) {
   return (
-    <div className="space-y-4 bg-primary">
+    <div className="space-y-4">
       {data.map((item) => (
         <ItemCard 
           key={item.id} 

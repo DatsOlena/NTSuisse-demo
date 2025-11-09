@@ -81,7 +81,7 @@ export default function DataManagement() {
           {loading ? (
             <Loader />
           ) : data.length === 0 ? (
-            <div className="text-center py-8 color-secondary bg-primary">
+            <div className="text-center py-8 color-secondary">
               No items found. Add one above!
             </div>
           ) : (
