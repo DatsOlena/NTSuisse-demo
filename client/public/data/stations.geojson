@@ -1,0 +1,83 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "2061",
+        "name": "Zürich / Limmat",
+        "river": "Limmat",
+        "canton": "ZH"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [8.5417, 47.3769]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "2141",
+        "name": "Bern / Aare",
+        "river": "Aare",
+        "canton": "BE"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [7.4474, 46.948]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "2155",
+        "name": "Thun / Aare",
+        "river": "Aare",
+        "canton": "BE"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [7.627, 46.758]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "2325",
+        "name": "Luzern / Reuss",
+        "river": "Reuss",
+        "canton": "LU"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [8.3059, 47.0502]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "2409",
+        "name": "Basel / Rhein",
+        "river": "Rhein",
+        "canton": "BS"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [7.5886, 47.5596]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "2106",
+        "name": "Birs / Hofmatt",
+        "river": "Birs",
+        "canton": "BS"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [7.6162, 47.5222]
+      }
+    }
+  ]
+}

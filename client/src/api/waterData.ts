@@ -1,6 +1,7 @@
 export interface StationSummary {
   id: string
   name: string
+  source?: string
 }
 
 export interface StationMeasurement {
@@ -13,6 +14,7 @@ export interface StationMeasurement {
 }
 
 export interface StationDataResponse {
+  source: string
   station: {
     id: string | number
     name: string

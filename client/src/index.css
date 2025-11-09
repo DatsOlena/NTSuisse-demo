@@ -216,3 +216,16 @@
 .shadow-theme-lg {
   box-shadow: var(--shadow-lg);
 }
+
+.leaflet-tooltip.tooltip-custom {
+  background-color: #ffffff;
+  color: #1f2937;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
+}
+
+.leaflet-tooltip.tooltip-custom::before {
+  display: none;
+}

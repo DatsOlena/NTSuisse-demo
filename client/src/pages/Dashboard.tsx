@@ -1,12 +1,25 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchStationData, fetchStations, StationDataResponse, StationSummary } from '../api/waterData'
 import Loader from '../components/Loader'
+import WaterMap from '../components/WaterMap'
 
 const FALLBACK_STATIONS: StationSummary[] = [
   { id: '2061', name: 'Zürich / Limmat' },
   { id: '2141', name: 'Bern / Aare' },
   { id: '2409', name: 'Basel / Rhein' },
+  { id: '2106', name: 'Birs / Hofmatt' },
 ]
+
+const SOURCE_LABELS: Record<string, string> = {
+  'opendata.bs.ch': 'Basel Open Data (data.bs.ch)',
+  'local-snapshot': 'Local CSV snapshot',
+  foen: 'FOEN Hydrological API',
+}
+
+function sourceLabel(source?: string) {
+  if (!source) return 'Unknown source'
+  return SOURCE_LABELS[source] ?? source
+}
 
 export default function Dashboard() {
   const [stations, setStations] = useState<StationSummary[]>(FALLBACK_STATIONS)
@@ -44,7 +57,7 @@ export default function Dashboard() {
       })
       .catch((err) => {
         console.error('Failed to load station data', err)
-        setError('Unable to load water analytics from FOEN API.')
+        setError('Unable to load water analytics for this station.')
         setStationData(null)
       })
       .finally(() => {
@@ -66,9 +79,14 @@ export default function Dashboard() {
           <div>
             <h1 className="text-3xl font-bold text-primary mb-2">Swiss Water Analytics</h1>
             <p className="text-secondary max-w-2xl">
-              Live hydrological measurements from the Swiss Federal Office for the Environment (FOEN / BAFU).
-              Select a monitoring station to explore the latest water levels, discharge, and temperature data.
+              Live hydrological measurements curated from Swiss open-data sources. Explore the latest water levels,
+              discharge, and temperature readings for key monitoring stations.
             </p>
+            <div className="mt-3">
+            <a className="text-secondary underline" href="https://www.hydrodaten.admin.ch/de/aktuelle-lage" target="_blank" rel="noreferrer">
+              View official Swiss water map (FOEN)
+            </a>
+            </div>
           </div>
           <div className="flex flex-col gap-2 md:w-64">
             <label htmlFor="station" className="text-sm font-medium text-secondary uppercase tracking-wide">
@@ -88,6 +106,10 @@ export default function Dashboard() {
             </select>
           </div>
         </header>
+
+        <section className="relative z-0 mt-6">
+          <WaterMap />
+        </section>
 
         {loading ? (
           <Loader />
@@ -135,7 +157,7 @@ export default function Dashboard() {
                   <p className="text-sm text-secondary uppercase tracking-wide mb-1">Measurements</p>
                   <ul className="list-disc list-inside text-secondary space-y-1">
                     {stationData.measurements.slice(0, 6).map((m) => (
-                      <li key={m.id ?? `${m.label}-${m.timestamp}`}> 
+                      <li key={m.id ?? `${m.label}-${m.timestamp}`}>
                         {m.label}: {typeof m.value === 'number' ? m.value : '—'}
                         {m.unit ? ` ${m.unit}` : ''}
                       </li>
@@ -144,7 +166,7 @@ export default function Dashboard() {
                 </div>
               </div>
               <p className="text-xs text-secondary mt-6">
-                Data source: FOEN (Bundesamt für Umwelt) Hydrological data API &ndash; https://www.hydrodaten.admin.ch
+                Data source: {sourceLabel(stationData.source)}
               </p>
             </section>
           </>
