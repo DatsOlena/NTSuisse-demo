@@ -77,7 +77,7 @@ export default function Dashboard() {
       <div className="max-w-6xl mx-auto px-6 space-y-12">
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-primary mb-2">Swiss Water Analytics</h1>
+            <h1 className="text-3xl font-bold color-primary mb-2">Swiss Water Analytics</h1>
             <p className="text-secondary max-w-2xl">
               Live hydrological measurements curated from Swiss open-data sources. Explore the latest water levels,
               discharge, and temperature readings for key monitoring stations.
@@ -89,7 +89,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex flex-col gap-2 md:w-64">
-            <label htmlFor="station" className="text-sm font-medium text-secondary uppercase tracking-wide">
+            <label htmlFor="station" className="text-sm font-medium color-primary uppercase tracking-wide">
               Monitoring station
             </label>
             <select

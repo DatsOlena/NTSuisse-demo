@@ -26,30 +26,47 @@ export default function About() {
       <main className="relative z-10">
         <div className="max-w-7xl mx-auto p-6 space-y-10">
           <div className="p-6 mb-6 backdrop-blur-sm">
-            <h2 className="text-xl font-semibold text-primary mb-3">Project Overview</h2>
+            <h2 className="text-2xl font-bold mb-4 color-primary">Project Overview</h2>
             <p className="text-secondary mb-4">
-              This is a full-stack CRUD demo application built with modern web technologies,
-              demonstrating data persistence and frontend–backend integration. The project
-              showcases a clean, responsive UI with real-time data management capabilities.
+              WaterLab Demo is a full-stack experience that mirrors the Eawag / NTSuisse initiative by blending
+              operational CRUD workflows with live Swiss hydrological intelligence. The goal is to show how a modern
+              React + TypeScript interface can surface actionable insights from a Node.js + Express API backed by
+              SQLite, all while staying performant and easy to extend.
+            </p>
+            <p className="text-secondary mb-4">
+              On the surface you will find intuitive data management for local records, theme-aware UI components, and
+              responsive layouts crafted with Tailwind CSS. Under the hood the server harmonises multiple data sources –
+              Basel’s open Socrata feeds, FOEN fallbacks, and curated CSV snapshots – to serve consistent measurement
+              payloads for Swiss monitoring stations.
             </p>
             <p className="text-secondary">
-              The application features a React + TypeScript frontend connected to a Node.js + Express
-              backend with SQLite database, providing a complete example of a working full-stack application.
+              The Dashboard visualises this stream through analytics cards and an interactive Leaflet map, while the
+              About page now pulls real-time water headlines via RSS to keep stakeholders informed. Together these
+              pieces illustrate how research teams can combine open data, graceful degradation, and rich storytelling in
+              a single, production-ready foundation.
             </p>
           </div>
 
-          <WaterNews />
+
 
           <div className="bg-primary max-w-2xl mx-auto bg-opacity-90 rounded-lg shadow-theme-lg p-6 backdrop-blur-sm">
-            <h2 className="text-xl font-semibold text-primary mb-3">Technologies Used</h2>
+            <h2 className="text-xl font-semibold text-secondary mb-3">Technologies Used</h2>
             <ul className="list-disc list-inside space-y-2 text-secondary">
-              <li><strong>Frontend:</strong> React 18, TypeScript, Tailwind CSS</li>
-              <li><strong>Backend:</strong> Node.js, Express, SQLite</li>
-              <li><strong>Build Tool:</strong> Vite</li>
-              <li><strong>Features:</strong> Theme switching, responsive design, RESTful API</li>
+              <li>
+                <strong>Frontend:</strong> React 18, TypeScript, Vite, React Router, Tailwind CSS, React Leaflet, RSS-driven widgets
+              </li>
+              <li>
+                <strong>Backend:</strong> Node.js, Express, sql.js (SQLite), node-fetch, rss-parser with multi-source aggregation
+              </li>
+              <li>
+                <strong>Data sources:</strong> Basel Open Data (Socrata API), FOEN hydrological feeds, curated CSV snapshots, UN Water news
+              </li>
+              <li>
+                <strong>Tooling & DX:</strong> ESBuild via Vite, TypeScript strictness, Theme context with localStorage, graceful API fallbacks
+              </li>
             </ul>
           </div>
-
+          <WaterNews />
 
         </div>
       </main>

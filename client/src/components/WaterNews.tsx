@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchWaterNews, type WaterNewsArticle } from '../api/news'
 import Loader from './Loader'
 
-const FALLBACK_IMAGE = 'https://www.unwater.org/sites/default/files/2022-02/UN-Water_0.png'
+const FALLBACK_IMAGE = '/public/logo/FallbackNews.png'
 
 export default function WaterNews() {
   const [articles, setArticles] = useState<WaterNewsArticle[]>([])
@@ -59,8 +59,14 @@ export default function WaterNews() {
   }
 
   return (
+    <>
+      <hr className="my-4" />
     <section className="max-w-6xl mx-auto">
-      <h2 className="text-2xl font-bold text-primary mb-4">Recent Water News</h2>
+  
+      <h2 className="text-2xl font-bold color-primary mb-4">Recent Water News</h2>
+      <div className="rounded-xl hidden md:block">
+      <img src="/public/logo/UNWater.png" alt="UN Water Logo" className="rounded-xl w-full h-44 object-cover" />
+      </div>
       <div className="grid gap-6 md:grid-cols-2">
         {articles.map((article, index) => {
           const previewImage = article.image ?? FALLBACK_IMAGE
@@ -103,6 +109,9 @@ export default function WaterNews() {
           )
         })}
       </div>
+    
     </section>
+    <hr className="my-4 w-full" />
+    </>
   )
 }
