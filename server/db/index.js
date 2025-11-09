@@ -1,9 +1,11 @@
+// Database helper module. Wraps sql.js initialisation and exposes tiny query helpers.
 import initSqlJs from 'sql.js'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { createRequire } from 'module'
 
 const require = createRequire(import.meta.url)
 
+// Boots the in-process SQLite database and ensures the schema exists.
 export async function initDatabase(dbFilePath) {
   const wasmPath = require.resolve('sql.js/dist/sql-wasm.wasm')
   const wasmBinary = readFileSync(wasmPath)
@@ -40,6 +42,7 @@ export async function initDatabase(dbFilePath) {
   return { db, saveDatabase }
 }
 
+// Executes a SELECT returning all rows as JS objects.
 export function queryAll(db, sql, params = []) {
   const stmt = db.prepare(sql)
   if (params.length > 0) {
@@ -55,6 +58,7 @@ export function queryAll(db, sql, params = []) {
   return items
 }
 
+// Executes a SELECT returning the first row or null.
 export function queryOne(db, sql, params = []) {
   const stmt = db.prepare(sql)
   if (params.length > 0) {
@@ -70,6 +74,7 @@ export function queryOne(db, sql, params = []) {
   return item
 }
 
+// Executes INSERT/UPDATE/DELETE statements.
 export function execute(db, sql, params = []) {
   const stmt = db.prepare(sql)
   if (params.length > 0) {
@@ -80,6 +85,7 @@ export function execute(db, sql, params = []) {
   stmt.free()
 }
 
+// Convenience helper to check if an ID exists without pulling the entire row.
 export function itemExists(db, id) {
   const item = queryOne(db, 'SELECT id FROM data_items WHERE id = ?', [id])
   return item !== null

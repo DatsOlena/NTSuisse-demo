@@ -1,8 +1,11 @@
+// Swiss water analytics router. Serves station lists and measurement payloads
+// by blending Socrata feeds with a local CSV snapshot.
 import { Router } from 'express'
 import fetch from 'node-fetch'
 import { readFileSync, existsSync } from 'fs'
 import { join } from 'path'
 
+// Basel stations we always expose, regardless of upstream availability.
 const DEFAULT_STATIONS = [
   { id: '2061', name: 'Zürich / Limmat' },
   { id: '2141', name: 'Bern / Aare' },
@@ -11,6 +14,7 @@ const DEFAULT_STATIONS = [
   { id: '2409', name: 'Basel / Rhein' },
 ]
 
+// Socrata endpoints for live data. Easy to extend with more stations.
 const SOCRATA_SOURCES = {
   '2106': {
     stationId: '2106',
@@ -24,6 +28,9 @@ const SOCRATA_SOURCES = {
 const socrataCache = new Map()
 const SOCRATA_CACHE_MAX_AGE = 5 * 60 * 1000 // 5 minutes
 
+// ----------------------------- Utility helpers -----------------------------
+
+// Converts optional numeric fields ("120", "") into floats while tolerating blanks.
 function toNumber(value) {
   if (value === undefined || value === null) return null
   const trimmed = String(value).trim()
@@ -32,6 +39,7 @@ function toNumber(value) {
   return Number.isFinite(num) ? num : null
 }
 
+// Tries multiple timestamp formats (German, ISO, etc.) and returns a Date.
 function parseTimestamp(value) {
   if (!value) {
     return null
@@ -56,6 +64,8 @@ function parseTimestamp(value) {
   return null
 }
 
+// Extracts a field from an object by scanning for keyword matches (handles
+// multilingual Socrata keys like "temperatur" and "temperature").
 function getFieldByKeywords(record, keywords) {
   if (!record) {
     return undefined
@@ -68,6 +78,7 @@ function getFieldByKeywords(record, keywords) {
   return match ? match[1] : undefined
 }
 
+// Wraps CSV loading in a closure so the data is cached between requests.
 function createLocalDataLoader(csvPath) {
   let cache = null
   let loadedAt = 0
@@ -123,6 +134,7 @@ function createLocalDataLoader(csvPath) {
   }
 }
 
+// Pulls live measurements for Basel stations from the Socrata API.
 async function fetchSocrataStationData(stationId) {
   const source = SOCRATA_SOURCES[stationId]
   if (!source) {
@@ -227,12 +239,16 @@ async function fetchSocrataStationData(stationId) {
   return payload
 }
 
+// Adds a "source" flag so the frontend can display whether data came from Socrata
+// or the local CSV snapshot.
 function withSource(payload, source) {
   if (!payload) {
     return null
   }
   return { ...payload, source }
 }
+
+// ------------------------------- Router setup -------------------------------
 
 export default function createWaterRouter({ dataPath }) {
   const router = Router()
@@ -323,7 +339,7 @@ export default function createWaterRouter({ dataPath }) {
   }
 
   async function fetchStationData() {
-    // FOEN integration disabled – placeholder to keep compatibility.
+    // FOEN integration disabled – placeholder left for future reactivation.
     return null
   }
 

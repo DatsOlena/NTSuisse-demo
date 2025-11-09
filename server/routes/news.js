@@ -1,12 +1,14 @@
 import { Router } from 'express'
 import RSSParser from 'rss-parser'
 
+// Parser configured with friendly UA for providers that reject generic fetchers.
 const rssParser = new RSSParser({
   headers: {
     'User-Agent': 'WaterLab Demo RSS/1.0 (+https://localhost)',
   },
 })
 
+// Upstream feeds the demo currently trusts. Easy to extend if new feeds are needed.
 const NEWS_SOURCES = [
   {
     url: 'https://www.unwater.org/rss.xml',
@@ -16,11 +18,16 @@ const NEWS_SOURCES = [
 
 const NEWS_CACHE_TTL = 10 * 60 * 1000 // 10 minutes
 
+// Simple in-memory cache so the backend does not hammer RSS providers.
 let newsCache = {
   items: [],
   fetchedAt: 0,
 }
 
+// ----------------------------- Helper functions -----------------------------
+
+// Normalises media URLs (RSS thumbnail, <img> tags, etc.) so the frontend always
+// receives a fully-qualified URL, even when the feed uses relative paths.
 function extractImageFromItem(item) {
   const articleLink = item.link ?? ''
   const baseUrl = (() => {
@@ -125,6 +132,7 @@ function extractImageFromItem(item) {
   return null
 }
 
+// Fetches all configured feeds, merges them, and caches the result.
 async function fetchLatestNews() {
   const now = Date.now()
   if (newsCache.items.length && now - newsCache.fetchedAt < NEWS_CACHE_TTL) {
@@ -170,6 +178,8 @@ async function fetchLatestNews() {
   newsCache = { items: articles, fetchedAt: now }
   return newsCache.items
 }
+
+// ------------------------------- Router setup -------------------------------
 
 export default function createNewsRouter() {
   const router = Router()
