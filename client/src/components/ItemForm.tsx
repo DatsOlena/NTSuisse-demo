@@ -27,7 +27,7 @@ export default function ItemForm({ onSubmit }: { onSubmit: (data: any) => void }
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
-        <button className="bg-primary text-secondary py-2 rounded">Add Item</button>
+        <button className="bg-color-primary text-inverse py-2 rounded">Add Item</button>
       </form>
     );
   }
