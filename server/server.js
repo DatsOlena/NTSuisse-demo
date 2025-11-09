@@ -31,10 +31,11 @@ const require = createRequire(import.meta.url);
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Middleware
+// --- Global middleware -----------------------------------------------------
 app.use(cors());
 app.use(express.json());
 
+// --- RSS aggregation configuration -----------------------------------------
 const NEWS_SOURCES = [
   {
     url: 'https://www.unwater.org/rss.xml',
@@ -49,6 +50,7 @@ let newsCache = {
 
 const NEWS_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
+// Extracts the best thumbnail URL from an RSS item, resolving relative paths
 function extractImageFromItem(item) {
   const articleLink = item.link ?? '';
   const baseUrl = (() => {
@@ -153,6 +155,7 @@ function extractImageFromItem(item) {
   return null;
 }
 
+// Fetches and caches headlines from every configured RSS feed
 async function fetchLatestNews() {
   const now = Date.now();
   if (newsCache.items.length && now - newsCache.fetchedAt < NEWS_CACHE_TTL) {
@@ -199,7 +202,7 @@ async function fetchLatestNews() {
   return newsCache.items;
 }
 
-// FOEN water data configuration
+// --- Water analytics data sources ------------------------------------------
 const DEFAULT_STATIONS = [
   { id: '2061', name: 'Zürich / Limmat' },
   { id: '2141', name: 'Bern / Aare' },
@@ -226,6 +229,7 @@ let localWaterDataCache = null;
 let localWaterDataLoadedAt = 0;
 const LOCAL_WATER_DATA_MAX_AGE = 15 * 60 * 1000; // 15 minutes
 
+// Converts optional numeric fields (e.g. "120") into floats while tolerating blanks
 function toNumber(value) {
   if (value === undefined || value === null) return null;
   const trimmed = String(value).trim();
@@ -234,6 +238,7 @@ function toNumber(value) {
   return Number.isFinite(num) ? num : null;
 }
 
+// Lazily loads the CSV snapshot used as an offline fallback
 function loadLocalWaterData() {
   try {
     if (
@@ -286,6 +291,7 @@ function loadLocalWaterData() {
   }
 }
 
+// Merges defaults, Socrata entries, and CSV fallback into one station list
 function getStationList() {
   const stationsById = new Map();
 
@@ -322,6 +328,7 @@ function getStationList() {
   return Array.from(stationsById.values());
 }
 
+// Retrieves all measurements available for a station from the CSV snapshot
 function getLocalStationData(stationId) {
   const dataset = loadLocalWaterData();
   const entry = dataset.find((row) => row.station_id === stationId);
@@ -369,6 +376,7 @@ function getLocalStationData(stationId) {
   };
 }
 
+// Attempts to parse a timestamp from multilingual field names
 function parseTimestamp(value) {
   if (!value) {
     return null;
@@ -388,6 +396,7 @@ function parseTimestamp(value) {
   return null;
 }
 
+// Finds a value in a Socrata record by scanning related keywords
 function getFieldByKeywords(record, keywords) {
   if (!record) {
     return undefined;
@@ -400,6 +409,7 @@ function getFieldByKeywords(record, keywords) {
   return match ? match[1] : undefined;
 }
 
+// Pulls live measurements for Basel stations from the Socrata API
 async function fetchSocrataStationData(stationId) {
   const source = SOCRATA_SOURCES[stationId];
   if (!source) {
@@ -506,6 +516,7 @@ async function fetchSocrataStationData(stationId) {
   return payload;
 }
 
+// Tags payloads with their upstream source for the frontend UI
 function withSource(payload, source) {
   if (!payload) {
     return null;
@@ -513,6 +524,7 @@ function withSource(payload, source) {
   return { ...payload, source };
 }
 
+// Placeholder for FOEN integration (kept disabled until JSON access is restored)
 async function fetchStationData(stationId) {
   // FOEN integration is currently disabled because the public JSON endpoint requires
   // access credentials. This placeholder exists so existing callers can await it safely.
@@ -520,6 +532,7 @@ async function fetchStationData(stationId) {
   return null;
 }
 
+// --- REST API routes --------------------------------------------------------
 app.get('/api/news', async (req, res) => {
   try {
     const articles = await fetchLatestNews();
@@ -572,6 +585,7 @@ app.get('/api/water/stations/:id', async (req, res) => {
   return res.status(404).json({ error: 'Station not found in any data source' });
 });
 
+// --- SQLite bootstrap & CRUD endpoints -------------------------------------
 let db;
 const dbPath = join(__dirname, 'database.sqlite');
 
@@ -606,6 +620,7 @@ async function initDatabase() {
     saveDatabase();
 }
 
+// Persists the in-memory SQL.js database to disk after each write
 function saveDatabase() {
   if (db) {
     const data = db.export();
@@ -622,6 +637,7 @@ try {
   process.exit(1);
 }
 
+// Validates numeric ID parameters coming from the URL
 function validateId(id) {
   const numId = parseInt(id, 10);
   if (Number.isNaN(numId) || numId <= 0) {
@@ -630,6 +646,7 @@ function validateId(id) {
   return numId;
 }
 
+// Ensures create/update payloads meet our minimal requirements
 function validateInput(name, description) {
   if (!name || typeof name !== 'string' || !name.trim()) {
     return 'Name is required and must be a non-empty string';
@@ -646,6 +663,7 @@ function validateInput(name, description) {
   return null;
 }
 
+// CRUD: list all data items
 app.get('/api/data', (req, res) => {
   try {
     const items = queryAll(db, 'SELECT * FROM data_items ORDER BY createdAt DESC');
@@ -656,6 +674,7 @@ app.get('/api/data', (req, res) => {
   }
 });
 
+// CRUD: fetch a single item by ID
 app.get('/api/data/:id', (req, res) => {
   try {
     const id = validateId(req.params.id);
@@ -674,6 +693,7 @@ app.get('/api/data/:id', (req, res) => {
   }
 });
 
+// CRUD: create a new item
 app.post('/api/data', (req, res) => {
   try {
     const { name, description } = req.body;
@@ -701,6 +721,7 @@ app.post('/api/data', (req, res) => {
   }
 });
 
+// CRUD: update an existing item
 app.put('/api/data/:id', (req, res) => {
   try {
     const id = validateId(req.params.id);
@@ -740,6 +761,7 @@ app.put('/api/data/:id', (req, res) => {
   }
 });
 
+// CRUD: delete an item
 app.delete('/api/data/:id', (req, res) => {
   try {
     const id = validateId(req.params.id);
@@ -763,6 +785,7 @@ app.delete('/api/data/:id', (req, res) => {
   }
 });
 
+// --- Server startup ---------------------------------------------------------
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 }).on('error', (err) => {
