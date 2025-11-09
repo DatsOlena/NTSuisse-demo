@@ -31,4 +31,3 @@ export default function ItemForm({ onSubmit }: { onSubmit: (data: any) => void }
       </form>
     );
   }
-  s

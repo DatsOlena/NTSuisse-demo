@@ -10,30 +10,6 @@
   --color-primary-light: #D6EEF2;
   --color-primary-dark: #164E59;
   
-  /* Accent - Sky Blue */
-  --color-accent: #E6F0FA;
-  --color-accent-hover: #D0E0F5;
-  
-  /* Success - Green */
-  --color-success: #10B981;
-  --color-success-hover: #059669;
-  --color-success-light: #D1FAE5;
-  
-  /* Error - Soft Red */
-  --color-danger: #EF4444;
-  --color-danger-hover: #DC2626;
-  --color-danger-light: #FEE2E2;
-  
-  /* Warning */
-  --color-warning: #F59E0B;
-  --color-warning-hover: #D97706;
-  --color-warning-light: #FEF3C7;
-  
-  /* Info */
-  --color-info: #1F7285;
-  --color-info-hover: #195e6b;
-  --color-info-light: #D6EEF2;
-  
   /* Secondary */
   --color-secondary: #6B7280;
   --color-secondary-hover: #4B5563;
@@ -69,30 +45,6 @@
   --color-primary-hover: #1F7285;
   --color-primary-light: #195e6b;
   --color-primary-dark: #0f3a43;
-  
-  /* Accent */
-  --color-accent: #195e6b;
-  --color-accent-hover: #2b6f7c;
-  
-  /* Success - Green */
-  --color-success: #10B981;
-  --color-success-hover: #059669;
-  --color-success-light: #065F46;
-  
-  /* Error - Soft Red */
-  --color-danger: #EF4444;
-  --color-danger-hover: #DC2626;
-  --color-danger-light: #991B1B;
-  
-  /* Warning */
-  --color-warning: #F59E0B;
-  --color-warning-hover: #D97706;
-  --color-warning-light: #92400E;
-  
-  /* Info */
-  --color-info: #2AA0B4;
-  --color-info-hover: #1F7285;
-  --color-info-light: #195e6b;
   
   /* Secondary */
   --color-secondary: #94A3B8;
@@ -131,14 +83,6 @@
 
 .bg-secondary {
   background-color: var(--bg-secondary);
-}
-
-.bg-tertiary {
-  background-color: var(--bg-tertiary);
-}
-
-.bg-accent {
-  background-color: var(--bg-accent);
 }
 
 /* Text Colors */
@@ -186,22 +130,6 @@
 
 .bg-color-primary-light {
   background-color: var(--color-primary-light);
-}
-
-.color-success {
-  color: var(--color-success);
-}
-
-.bg-color-success {
-  background-color: var(--color-success);
-}
-
-.color-danger {
-  color: var(--color-danger);
-}
-
-.bg-color-danger {
-  background-color: var(--color-danger);
 }
 
 /* Shadows */
