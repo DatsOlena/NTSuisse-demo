@@ -11,11 +11,18 @@ import express from 'express';
 import cors from 'cors';
 import initSqlJs from 'sql.js';
 import fetch from 'node-fetch';
+import RSSParser from 'rss-parser';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { createRequire } from 'module';
 import { queryAll, queryOne, execute, itemExists } from './db.js';
+
+const rssParser = new RSSParser({
+  headers: {
+    'User-Agent': 'WaterLab Demo RSS/1.0 (+https://localhost)',
+  },
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -27,6 +34,170 @@ const PORT = process.env.PORT || 5001;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+const NEWS_SOURCES = [
+  {
+    url: 'https://www.unwater.org/rss.xml',
+    source: 'UN Water',
+  },
+];
+
+let newsCache = {
+  items: [],
+  fetchedAt: 0,
+};
+
+const NEWS_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+function extractImageFromItem(item) {
+  const articleLink = item.link ?? '';
+  const baseUrl = (() => {
+    try {
+      return articleLink ? new URL(articleLink).origin : null;
+    } catch (err) {
+      return null;
+    }
+  })();
+
+  function normalise(urlValue) {
+    if (!urlValue || typeof urlValue !== 'string') {
+      return null;
+    }
+    const trimmed = urlValue.trim();
+    if (!trimmed) {
+      return null;
+    }
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    if (baseUrl) {
+      try {
+        return new URL(trimmed, baseUrl).toString();
+      } catch (err) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  function fromHtml(html) {
+    if (!html || typeof html !== 'string') {
+      return null;
+    }
+    const match = html.match(/<img[^>]+src\s*=\s*["']([^"'>]+)["']/i);
+    if (match && match[1]) {
+      return normalise(match[1]);
+    }
+    return null;
+  }
+
+  const enclosure = item.enclosure;
+  if (enclosure) {
+    if (Array.isArray(enclosure)) {
+      const match = enclosure.find((entry) => entry?.url);
+      const url = match?.url;
+      const normalised = normalise(url);
+      if (normalised) return normalised;
+    } else if (typeof enclosure === 'object' && enclosure.url) {
+      const normalised = normalise(enclosure.url);
+      if (normalised) return normalised;
+    }
+  }
+
+  const mediaContent = item['media:content'];
+  if (mediaContent) {
+    if (Array.isArray(mediaContent)) {
+      const match = mediaContent.find((entry) => entry?.url || entry?.['$']?.url);
+      const candidate = match?.url ?? match?.['$']?.url;
+      const normalised = normalise(candidate);
+      if (normalised) return normalised;
+    } else if (mediaContent?.url) {
+      const normalised = normalise(mediaContent.url);
+      if (normalised) return normalised;
+    } else if (mediaContent?.['$']?.url) {
+      const normalised = normalise(mediaContent['$'].url);
+      if (normalised) return normalised;
+    }
+  }
+
+  const mediaThumbnail = item['media:thumbnail'];
+  if (mediaThumbnail) {
+    if (Array.isArray(mediaThumbnail)) {
+      const match = mediaThumbnail.find((entry) => entry?.url || entry?.['$']?.url);
+      const candidate = match?.url ?? match?.['$']?.url;
+      const normalised = normalise(candidate);
+      if (normalised) return normalised;
+    } else if (mediaThumbnail?.url) {
+      const normalised = normalise(mediaThumbnail.url);
+      if (normalised) return normalised;
+    } else if (mediaThumbnail?.['$']?.url) {
+      const normalised = normalise(mediaThumbnail['$'].url);
+      if (normalised) return normalised;
+    }
+  }
+
+  if (item.image) {
+    const candidate = Array.isArray(item.image) ? item.image[0] : item.image;
+    const normalised = normalise(candidate);
+    if (normalised) return normalised;
+  }
+
+  const htmlFields = [item['content:encoded'], item.content, item.summary, item.contentSnippet];
+  for (const html of htmlFields) {
+    const normalised = fromHtml(html);
+    if (normalised) {
+      return normalised;
+    }
+  }
+
+  return null;
+}
+
+async function fetchLatestNews() {
+  const now = Date.now();
+  if (newsCache.items.length && now - newsCache.fetchedAt < NEWS_CACHE_TTL) {
+    return newsCache.items;
+  }
+
+  const results = await Promise.allSettled(
+    NEWS_SOURCES.map(async (source) => {
+      const feed = await rssParser.parseURL(source.url);
+      return feed.items.map((item) => ({
+        title: item.title ?? 'Untitled article',
+        link: item.link ?? source.url,
+        date: item.isoDate ?? item.pubDate ?? null,
+        summary: item.contentSnippet ?? item.content ?? '',
+        source: source.source,
+        image: extractImageFromItem(item),
+      }));
+    }),
+  );
+
+  const articles = results
+    .flatMap((result, index) => {
+      const sourceMeta = NEWS_SOURCES[index];
+      if (result.status === 'fulfilled') {
+        console.log(`Fetched ${result.value.length} items from ${sourceMeta?.source ?? 'unknown source'}`);
+        return result.value;
+      }
+      console.warn(`News source failed (${sourceMeta?.source ?? 'unknown'}):`, result.reason?.message ?? result.reason);
+      return [];
+    })
+    .sort((a, b) => {
+      const timeA = a.date ? new Date(a.date).getTime() : 0;
+      const timeB = b.date ? new Date(b.date).getTime() : 0;
+      return timeB - timeA;
+    })
+    .filter((article, index, arr) => arr.findIndex((item) => item.link === article.link) === index)
+    .slice(0, 8);
+
+  if (!articles.length) {
+    console.warn('No news articles available from configured sources.');
+  }
+
+  newsCache = { items: articles, fetchedAt: now };
+  return newsCache.items;
+}
 
 // FOEN water data configuration
 const DEFAULT_STATIONS = [
@@ -343,127 +514,96 @@ function withSource(payload, source) {
 }
 
 async function fetchStationData(stationId) {
-  const foenUrl = `https://www.hydrodaten.admin.ch/lhg/sdi/api/station/${stationId}`;
-  const response = await fetch(foenUrl, {
-    headers: {
-      Accept: 'application/json',
-      'user-agent': 'WaterLab Demo / ntsuisse (contact: demo@example.com)',
-    },
-  });
-
-  const rawBody = await response.text();
-  if (!response.ok) {
-    throw new Error(`FOEN API responded with ${response.status}. Body: ${rawBody.slice(0, 400)}`);
-  }
-
-  const contentType = response.headers.get('content-type') || '';
-  if (!contentType.includes('application/json')) {
-    throw new Error(`FOEN API returned unexpected content-type (${contentType}). Body: ${rawBody.slice(0, 400)}`);
-  }
-
-  const parsed = JSON.parse(rawBody);
-  const payload = Array.isArray(parsed) ? parsed[0] : parsed;
-  const station = payload?.station ?? {};
-  const timeseries = Array.isArray(payload?.timeseries) ? payload.timeseries : [];
-
-  const measurements = timeseries.map((series) => {
-    const parameter = series?.parameter ?? {};
-    const current = series?.currentMeasurement ?? {};
-    return {
-      id: series?.id ?? null,
-      label: parameter?.name ?? parameter?.shortName ?? 'Measurement',
-      shortName: parameter?.shortName ?? null,
-      unit: series?.unit ?? current?.unit ?? parameter?.unit ?? null,
-      value: typeof current?.value === 'number' ? current.value : toNumber(current?.value),
-      timestamp: current?.timestamp ?? null,
-    };
-  });
-
-  return {
-    station: {
-      id: station?.id ?? stationId,
-      name: station?.name ?? 'Unknown station',
-      waterBody: station?.waterBody?.name ?? station?.waterBody?.waterBodyName ?? null,
-      canton: station?.canton ?? null,
-      coordinates: station?.coordinates ?? null,
-    },
-    measurements,
-    raw: payload,
-  };
+  // FOEN integration is currently disabled because the public JSON endpoint requires
+  // access credentials. This placeholder exists so existing callers can await it safely.
+  // When FOEN access is restored, implement the HTTP request and return the station data.
+  return null;
 }
 
+app.get('/api/news', async (req, res) => {
+  try {
+    const articles = await fetchLatestNews();
+    res.json(articles);
+  } catch (err) {
+    console.error('Failed to fetch news feed:', err);
+    res.status(500).json({ error: 'Unable to fetch water news' });
+  }
+});
+
 app.get('/api/water/stations', (req, res) => {
-  const stations = getStationList();
-  res.json(stations);
+  try {
+    const stations = getStationList();
+    res.json(stations);
+  } catch (err) {
+    console.error('Failed to build station list:', err);
+    res.status(500).json({ error: 'Failed to fetch station list' });
+  }
 });
 
 app.get('/api/water/stations/:id', async (req, res) => {
   const { id } = req.params;
 
-  // Temporarily skip FOEN API calls while access is blocked.
-  // try {
-  //   const foenData = await fetchStationData(id);
-  //   if (foenData && foenData.measurements && foenData.measurements.length) {
-  //     return res.json(withSource(foenData, 'foen'));
-  //   }
-  // } catch (error) {
-  //   console.warn(`FOEN API unavailable for station ${id}:`, error.message);
-  // }
+  try {
+    const foenData = await fetchStationData(id);
+    if (foenData && Array.isArray(foenData.measurements) && foenData.measurements.length) {
+      console.log(`✅ Responding with foen for station ${id}`);
+      return res.json(withSource(foenData, 'foen'));
+    }
+  } catch (error) {
+    console.warn(`FOEN API unavailable for station ${id}:`, error?.message ?? error);
+  }
 
   try {
     const socrataData = await fetchSocrataStationData(id);
-    if (socrataData && socrataData.measurements && socrataData.measurements.length) {
-      const payload = withSource(socrataData, 'opendata.bs.ch');
-      console.log(`✅ Responding with ${payload.source} for station ${id}`);
-      return res.json(payload);
+    if (socrataData && Array.isArray(socrataData.measurements) && socrataData.measurements.length) {
+      console.log(`✅ Responding with opendata.bs.ch for station ${id}`);
+      return res.json(withSource(socrataData, 'opendata.bs.ch'));
     }
   } catch (error) {
-    console.warn(`Socrata source unavailable for station ${id}:`, error.message);
+    console.warn(`Socrata source unavailable for station ${id}:`, error?.message ?? error);
   }
 
   const localData = getLocalStationData(id);
-  if (!localData) {
-    return res.status(404).json({ error: 'Station not found in local dataset' });
+  if (localData) {
+    console.log(`✅ Responding with local-snapshot for station ${id}`);
+    return res.json(withSource(localData, 'local-snapshot'));
   }
 
-  const fallbackPayload = withSource(localData, 'local-snapshot');
-  console.log(`✅ Responding with ${fallbackPayload.source} for station ${id}`);
-  return res.json(fallbackPayload);
+  return res.status(404).json({ error: 'Station not found in any data source' });
 });
 
-// Database setup
 let db;
 const dbPath = join(__dirname, 'database.sqlite');
 
 async function initDatabase() {
-  // Load sql.js WASM file
-  const wasmPath = require.resolve('sql.js/dist/sql-wasm.wasm');
-  const wasmBinary = readFileSync(wasmPath);
-  
-  const SQL = await initSqlJs({
-    wasmBinary: wasmBinary
-  });
-  
-  // Load existing database or create new one
-  if (existsSync(dbPath)) {
-    const buffer = readFileSync(dbPath);
-    db = new SQL.Database(buffer);
-  } else {
-    db = new SQL.Database();
-  }
+    // Load sql.js WASM file
+    const wasmPath = require.resolve('sql.js/dist/sql-wasm.wasm');
+    const wasmBinary = readFileSync(wasmPath);
 
-  // Create table if it doesn't exist
-  db.run(`
-    CREATE TABLE IF NOT EXISTS data_items (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      description TEXT NOT NULL,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-  
-  // Save database to file
-  saveDatabase();
+    const SQL = await initSqlJs({
+      wasmBinary: wasmBinary
+    });
+
+    // Load existing database or create new one
+    if (existsSync(dbPath)) {
+      const buffer = readFileSync(dbPath);
+      db = new SQL.Database(buffer);
+    } else {
+      db = new SQL.Database();
+    }
+
+    // Create table if it doesn't exist
+    db.run(`
+      CREATE TABLE IF NOT EXISTS data_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Save database to file
+    saveDatabase();
 }
 
 function saveDatabase() {
@@ -474,7 +614,6 @@ function saveDatabase() {
   }
 }
 
-// Initialize database and start server
 try {
   await initDatabase();
   console.log('Database initialized successfully');
@@ -483,16 +622,14 @@ try {
   process.exit(1);
 }
 
-// Helper function to validate ID parameter
 function validateId(id) {
   const numId = parseInt(id, 10);
-  if (isNaN(numId) || numId <= 0) {
+  if (Number.isNaN(numId) || numId <= 0) {
     return null;
   }
   return numId;
 }
 
-// Helper function to validate input
 function validateInput(name, description) {
   if (!name || typeof name !== 'string' || !name.trim()) {
     return 'Name is required and must be a non-empty string';
@@ -509,8 +646,6 @@ function validateInput(name, description) {
   return null;
 }
 
-// Routes
-// Get all items
 app.get('/api/data', (req, res) => {
   try {
     const items = queryAll(db, 'SELECT * FROM data_items ORDER BY createdAt DESC');
@@ -521,14 +656,13 @@ app.get('/api/data', (req, res) => {
   }
 });
 
-// Get single item
 app.get('/api/data/:id', (req, res) => {
   try {
     const id = validateId(req.params.id);
     if (!id) {
       return res.status(400).json({ error: 'Invalid ID parameter' });
     }
-    
+
     const item = queryOne(db, 'SELECT * FROM data_items WHERE id = ?', [id]);
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
@@ -540,7 +674,6 @@ app.get('/api/data/:id', (req, res) => {
   }
 });
 
-// Create new item
 app.post('/api/data', (req, res) => {
   try {
     const { name, description } = req.body;
@@ -548,19 +681,19 @@ app.post('/api/data', (req, res) => {
     if (validationError) {
       return res.status(400).json({ error: validationError });
     }
-    
+
     const trimmedName = name.trim();
     const trimmedDescription = description.trim();
-    
+
     execute(db, 'INSERT INTO data_items (name, description) VALUES (?, ?)', [
       trimmedName,
       trimmedDescription,
     ]);
     saveDatabase();
-    
+
     // Get the inserted item
     const newItem = queryOne(db, 'SELECT * FROM data_items WHERE id = last_insert_rowid()');
-    
+
     res.status(201).json(newItem);
   } catch (error) {
     console.error('Error creating item:', error);
@@ -568,39 +701,38 @@ app.post('/api/data', (req, res) => {
   }
 });
 
-// Update item
 app.put('/api/data/:id', (req, res) => {
   try {
     const id = validateId(req.params.id);
     if (!id) {
       return res.status(400).json({ error: 'Invalid ID parameter' });
     }
-    
+
     const { name, description } = req.body;
     const validationError = validateInput(name, description);
     if (validationError) {
       return res.status(400).json({ error: validationError });
     }
-    
+
     // Check if item exists
     if (!itemExists(db, id)) {
       return res.status(404).json({ error: 'Item not found' });
     }
-    
+
     // Update the item
     const trimmedName = name.trim();
     const trimmedDescription = description.trim();
-    
+
     execute(db, 'UPDATE data_items SET name = ?, description = ? WHERE id = ?', [
       trimmedName,
       trimmedDescription,
       id,
     ]);
     saveDatabase();
-    
+
     // Get the updated item
     const updatedItem = queryOne(db, 'SELECT * FROM data_items WHERE id = ?', [id]);
-    
+
     res.json(updatedItem);
   } catch (error) {
     console.error('Error updating item:', error);
@@ -608,23 +740,22 @@ app.put('/api/data/:id', (req, res) => {
   }
 });
 
-// Delete item
 app.delete('/api/data/:id', (req, res) => {
   try {
     const id = validateId(req.params.id);
     if (!id) {
       return res.status(400).json({ error: 'Invalid ID parameter' });
     }
-    
+
     // Check if item exists
     if (!itemExists(db, id)) {
       return res.status(404).json({ error: 'Item not found' });
     }
-    
+
     // Delete the item
     execute(db, 'DELETE FROM data_items WHERE id = ?', [id]);
     saveDatabase();
-    
+
     res.json({ message: 'Item deleted successfully' });
   } catch (error) {
     console.error('Error deleting item:', error);
@@ -632,7 +763,6 @@ app.delete('/api/data/:id', (req, res) => {
   }
 });
 
-// Start server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 }).on('error', (err) => {
@@ -646,4 +776,3 @@ app.listen(PORT, () => {
     process.exit(1);
   }
 });
-

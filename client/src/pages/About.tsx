@@ -1,4 +1,4 @@
-
+import WaterNews from '../components/WaterNews'
 
 export default function About() {
   return (
@@ -24,7 +24,7 @@ export default function About() {
 
       {/* Body content */}
       <main className="relative z-10">
-        <div className="max-w-7xl mx-auto p-6">
+        <div className="max-w-7xl mx-auto p-6 space-y-10">
           <div className="p-6 mb-6 backdrop-blur-sm">
             <h2 className="text-xl font-semibold text-primary mb-3">Project Overview</h2>
             <p className="text-secondary mb-4">
@@ -38,6 +38,8 @@ export default function About() {
             </p>
           </div>
 
+          <WaterNews />
+
           <div className="bg-primary max-w-2xl mx-auto bg-opacity-90 rounded-lg shadow-theme-lg p-6 backdrop-blur-sm">
             <h2 className="text-xl font-semibold text-primary mb-3">Technologies Used</h2>
             <ul className="list-disc list-inside space-y-2 text-secondary">
@@ -47,6 +49,8 @@ export default function About() {
               <li><strong>Features:</strong> Theme switching, responsive design, RESTful API</li>
             </ul>
           </div>
+
+
         </div>
       </main>
     </div>
