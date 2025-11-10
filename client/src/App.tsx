@@ -1,5 +1,5 @@
-import Header from './components/Header'
-import Footer from './components/Footer'
+import Header from './components/Layout/Header'
+import Footer from './components/Layout/Footer'
 import About from './pages/About'
 import Dashboard from './pages/Dashboard'
 import DataManagement from './pages/DataManagement'

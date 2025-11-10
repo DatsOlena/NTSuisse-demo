@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchWaterNews, type WaterNewsArticle } from '../api/news'
-import Loader from './Loader'
+import Loader from './Shared/Loader'
 
 const FALLBACK_IMAGE = '/public/logo/FallbackNews.png'
 

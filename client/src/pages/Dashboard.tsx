@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchStationData, fetchStations, StationDataResponse, StationSummary } from '../api/waterData'
-import Loader from '../components/Loader'
+import Loader from '../components/Shared/Loader'
 import WaterMap from '../components/WaterMap'
 
 const FALLBACK_STATIONS: StationSummary[] = [

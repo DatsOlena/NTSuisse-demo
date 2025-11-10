@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { fetchAllItems, createItem, deleteItem, type DataItem } from '../api/api'
 import ItemForm from '../components/ItemForm'
 import ItemList from '../components/ItemList'
-import Loader from '../components/Loader'
+import Loader from '../components/Shared/Loader'
 
 export default function DataManagement() {
   const [data, setData] = useState<DataItem[]>([])
