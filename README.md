@@ -63,6 +63,16 @@ cd client && npm run dev   # http://localhost:3000
 - `npm run install:all` – installs deps in both workspaces
 - `npm run dev` – concurrently run backend + frontend (root script)
 - `npm run lint` (client/server respectively) – run ESLint/TS checks
+- `cd client && npm test` – executes Jest + React Testing Library suite
+
+### Testing
+Frontend tests run with Jest and React Testing Library. Example workflow:
+```bash
+cd client
+npm test          # run once
+npm test -- --watch # optional watch mode
+```
+Tests cover UI wiring (e.g., `Header`) and data logic (e.g., `useWaterMapData`). Extend by placing `*.test.tsx` files under `src/`.
 
 ## API Surface
 
