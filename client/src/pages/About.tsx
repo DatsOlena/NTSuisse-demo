@@ -28,22 +28,20 @@ export default function About() {
           <div className="p-6 mb-6 backdrop-blur-sm">
             <h2 className="text-2xl font-bold mb-4 color-primary">Project Overview</h2>
             <p className="text-secondary mb-4">
-              WaterLab Demo is a full-stack experience that mirrors the Eawag / NTSuisse initiative by blending
-              operational CRUD workflows with live Swiss hydrological intelligence. The goal is to show how a modern
-              React + TypeScript interface can surface actionable insights from a Node.js + Express API backed by
-              SQLite, all while staying performant and easy to extend.
+              WaterLab Demo is a full-stack showcase inspired by the Eawag / NTSuisse partnership. It pairs a modern
+              React + TypeScript interface with a modular Node.js backend to surface Swiss hydrological insights,
+              manage local research records, and curate water-sector news in one cohesive experience.
             </p>
             <p className="text-secondary mb-4">
-              On the surface you will find intuitive data management for local records, theme-aware UI components, and
-              responsive layouts crafted with Tailwind CSS. Under the hood the server harmonises multiple data sources –
-              Basel’s open Socrata feeds, FOEN fallbacks, and curated CSV snapshots – to serve consistent measurement
-              payloads for Swiss monitoring stations.
+              The Dashboard blends live Basel Socrata feeds, FOEN fallbacks, and curated CSV snapshots into analytics
+              cards plus an interactive Leaflet map, giving teams a quick situational view of key monitoring stations.
+              A dedicated Data Management area preserves CRUD workflows for local datasets, and theme-aware components
+              keep the UI responsive across devices.
             </p>
             <p className="text-secondary">
-              The Dashboard visualises this stream through analytics cards and an interactive Leaflet map, while the
-              About page now pulls real-time water headlines via RSS to keep stakeholders informed. Together these
-              pieces illustrate how research teams can combine open data, graceful degradation, and rich storytelling in
-              a single, production-ready foundation.
+              Behind the scenes, the Express API is split into focused routes for water metrics, news aggregation, and
+              SQLite persistence, each with caching and graceful degradation strategies. End-to-end tests powered by
+              Jest and React Testing Library ensure these building blocks stay reliable as the project evolves.
             </p>
           </div>
 
@@ -53,16 +51,16 @@ export default function About() {
             <h2 className="text-xl font-semibold text-secondary mb-3">Technologies Used</h2>
             <ul className="list-disc list-inside space-y-2 text-secondary">
               <li>
-                <strong>Frontend:</strong> React 18, TypeScript, Vite, React Router, Tailwind CSS, React Leaflet, RSS-driven widgets
+                <strong>Frontend UI:</strong> React 18, TypeScript, Vite, React Router, Tailwind CSS, theme context, React Leaflet
               </li>
               <li>
-                <strong>Backend:</strong> Node.js, Express, sql.js (SQLite), node-fetch, rss-parser with multi-source aggregation
+                <strong>Data & Visualisation:</strong> Basel Open Data (Socrata), FOEN hydrology backups, local CSV snapshot, GeoJSON station map
               </li>
               <li>
-                <strong>Data sources:</strong> Basel Open Data (Socrata API), FOEN hydrological feeds, curated CSV snapshots, UN Water news
+                <strong>Backend Services:</strong> Node.js + Express with modular routers, sql.js (SQLite) persistence, rss-parser + caching, node-fetch
               </li>
               <li>
-                <strong>Tooling & DX:</strong> ESBuild via Vite, TypeScript strictness, Theme context with localStorage, graceful API fallbacks
+                <strong>Tooling & Testing:</strong> TypeScript strict mode, ESLint, Jest, React Testing Library, ts-jest, identity-obj-proxy
               </li>
             </ul>
           </div>
