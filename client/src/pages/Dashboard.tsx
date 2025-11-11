@@ -81,12 +81,25 @@ export default function Dashboard() {
             <p className="text-secondary max-w-2xl">
               Live hydrological measurements curated from Swiss open-data sources. Explore the latest water levels,
               discharge, and temperature readings for key monitoring stations.
+              <div className="mt-3">
+                <a className="text-secondary underline" href="https://www.hydrodaten.admin.ch/de/aktuelle-lage" target="_blank" rel="noreferrer">
+                  View official Swiss water map (FOEN)
+                </a>
+              </div>
+              <div className="mt-3">
+                Basel river stations are updated in real time
+                via the{' '}
+                <a
+                  href="https://data.bs.ch/explore/dataset/100236/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline"
+                >
+                  Basel-Stadt open data portal.
+                </a>
+              </div>
             </p>
-            <div className="mt-3">
-            <a className="text-secondary underline" href="https://www.hydrodaten.admin.ch/de/aktuelle-lage" target="_blank" rel="noreferrer">
-              View official Swiss water map (FOEN)
-            </a>
-            </div>
+
           </div>
           <div className="flex flex-col gap-2 md:w-64">
             <label htmlFor="station" className="text-sm font-medium color-primary uppercase tracking-wide">
