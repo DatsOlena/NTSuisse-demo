@@ -44,18 +44,18 @@ describe('useWaterMapData', () => {
     mockFetchStations.mockResolvedValue([{ id: '2061', name: 'Zürich / Limmat' }])
 
     const measurement: StationDataResponse = {
-      station: {
-        id: '2061',
-        name: 'Zürich / Limmat',
-        waterBody: 'Limmat',
-        canton: 'ZH',
-      },
-      measurements: [
-        { id: 'temp', label: 'Water temperature', value: 8.5, unit: '°C', shortName: 'Temp' },
-      ],
-      source: 'local-snapshot',
-      timestamp: new Date().toISOString(),
-    }
+    station: {
+      id: '2061',
+      name: 'Zürich / Limmat',
+      waterBody: 'Limmat',
+      canton: 'ZH',
+      coordinates: null,
+    },
+    measurements: [
+      { id: 'temp', label: 'Water temperature', value: 8.5, unit: '°C', shortName: 'Temp', timestamp: new Date().toISOString() },
+    ],
+    source: 'local-snapshot',
+  }
 
     mockFetchStationData.mockResolvedValue(measurement)
 

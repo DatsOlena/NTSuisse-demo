@@ -23,6 +23,8 @@ export interface StationDataResponse {
     coordinates: unknown
   }
   measurements: StationMeasurement[]
+  timestamp?: string | null
+  raw?: Record<string, unknown>
 }
 
 const BASE_URL = '/api/water'
