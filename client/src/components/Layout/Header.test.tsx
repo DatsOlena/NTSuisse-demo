@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import Header from './Header'
+
+const mockUseLocation = jest.fn(() => ({ pathname: '/' }))
 
 jest.mock('react-router-dom', () => ({
   __esModule: true,
@@ -9,6 +11,7 @@ jest.mock('react-router-dom', () => ({
       {children}
     </a>
   ),
+  useLocation: () => mockUseLocation(),
 }))
 
 jest.mock('../shared/ThemeToggle', () => ({
@@ -21,10 +24,26 @@ describe('Header', () => {
     render(<Header />)
 
     expect(screen.getByRole('link', { name: /WaterLab Home/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /About/i })).toHaveAttribute('href', '/')
-    expect(screen.getByRole('link', { name: /Dashboard/i })).toHaveAttribute('href', '/dashboard')
-    expect(screen.getByRole('link', { name: /Data/i })).toHaveAttribute('href', '/data')
+    expect(screen.getAllByRole('link', { name: /About/i })[0]).toHaveAttribute('href', '/')
+    expect(screen.getAllByRole('link', { name: /Dashboard/i })[0]).toHaveAttribute('href', '/dashboard')
+    expect(screen.getAllByRole('link', { name: /Data/i })[0]).toHaveAttribute('href', '/data')
     expect(screen.getByTestId('theme-toggle')).toBeInTheDocument()
+  })
+
+  it('toggles mobile navigation menu visibility', () => {
+    render(<Header />)
+
+    const menuButton = screen.getByRole('button', { name: /open navigation menu/i })
+    expect(menuButton).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByLabelText(/Mobile navigation/i)).not.toBeInTheDocument()
+
+    fireEvent.click(menuButton)
+    expect(menuButton).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByLabelText(/Mobile navigation/i)).toBeInTheDocument()
+
+    fireEvent.click(menuButton)
+    expect(menuButton).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByLabelText(/Mobile navigation/i)).not.toBeInTheDocument()
   })
 })
 
