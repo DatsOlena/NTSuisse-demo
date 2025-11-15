@@ -21,9 +21,13 @@ const SOCRATA_SOURCES = {
     name: 'Birs / Hofmatt',
     waterBody: 'Birs',
     canton: 'BS',
-    url: 'https://data.bs.ch/api/v2/catalog/datasets/100236/records?limit=100',
+    datasetId: '100236',
+    orderByField: 'timestamp',
+    limit: 50,
   },
 }
+
+const SOCRATA_DATASET_BASE = 'https://data.bs.ch/api/explore/v2.1/catalog/datasets'
 
 const socrataCache = new Map()
 const SOCRATA_CACHE_MAX_AGE = 5 * 60 * 1000 // 5 minutes
@@ -146,7 +150,20 @@ async function fetchSocrataStationData(stationId) {
     return cached.data
   }
 
-  const response = await fetch(source.url, {
+  const requestUrl = new URL(`${SOCRATA_DATASET_BASE}/${source.datasetId}/records`)
+  const params = new URLSearchParams()
+  params.set('limit', String(source.limit ?? 50))
+  const orderField = source.orderByField || 'timestamp'
+  params.set('order_by', `${orderField} DESC`)
+  if (source.where) {
+    params.set('where', source.where)
+  }
+  if (source.select) {
+    params.set('select', source.select)
+  }
+  requestUrl.search = params.toString()
+
+  const response = await fetch(requestUrl.toString(), {
     headers: {
       Accept: 'application/json',
       'user-agent': 'WaterLab Demo / ntsuisse (contact: demo@example.com)',
@@ -158,7 +175,8 @@ async function fetchSocrataStationData(stationId) {
   }
 
   const body = await response.json()
-  const records = body?.records
+  const records =
+    (Array.isArray(body?.results) && body.results) || (Array.isArray(body?.records) && body.records)
   if (!Array.isArray(records)) {
     throw new Error('Unexpected Socrata JSON format')
   }
@@ -170,7 +188,7 @@ async function fetchSocrataStationData(stationId) {
   let latestTimestamp = null
 
   records.forEach((item) => {
-    const fields = item?.record?.fields || {}
+    const fields = item?.record?.fields || item?.fields || item || {}
     const ts = parseTimestamp(getFieldByKeywords(fields, ['zeit', 'timestamp', 'datum', 'time']))
 
     if (!latestFields || (ts && (!latestTimestamp || ts > latestTimestamp))) {
