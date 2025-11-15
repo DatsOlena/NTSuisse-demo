@@ -63,8 +63,10 @@ export default function Header() {
         </div>
       </div>
       {isMenuOpen ? (
+        <>
+        <hr className="md:hidden border-white/10" />
         <nav
-          className="md:hidden mt-4 rounded-lg border border-white/10 px-4 py-3 space-y-3 shadow-lg"
+          className="md:hidden mt-4 px-4 py-3 space-y-3"
           style={{ backgroundColor: 'rgba(31, 114, 133, 0.92)' }}
           aria-label="Mobile navigation"
         >
@@ -78,6 +80,7 @@ export default function Header() {
             </Link>
           ))}
         </nav>
+        </>
       ) : null}
     </header>
   )

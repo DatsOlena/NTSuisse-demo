@@ -14,7 +14,7 @@ export default function ItemCard({
           <h3 className="text-lg font-semibold color-primary mb-1">
             {item.name}
           </h3>
-          <p className="text-gray-600 mb-2">{item.description}</p>
+          <p className="text-secondary mb-2">{item.description}</p>
           <p className="text-sm text-gray-400">
             Created: {new Date(item.createdAt).toLocaleString()}
           </p>
