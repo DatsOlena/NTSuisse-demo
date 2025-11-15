@@ -11,7 +11,6 @@ const DEFAULT_STATIONS = [
   { id: '2141', name: 'Bern / Aare' },
   { id: '2155', name: 'Thun / Aare' },
   { id: '2325', name: 'Luzern / Reuss' },
-  { id: '2409', name: 'Basel / Rhein' },
 ]
 
 // Socrata endpoints for live data. Easy to extend with more stations.
@@ -22,6 +21,15 @@ const SOCRATA_SOURCES = {
     waterBody: 'Birs',
     canton: 'BS',
     datasetId: '100236',
+    orderByField: 'timestamp',
+    limit: 50,
+  },
+  '2409': {
+    stationId: '2409',
+    name: 'Basel / Rhein',
+    waterBody: 'Rhein',
+    canton: 'BS',
+    datasetId: '100089',
     orderByField: 'timestamp',
     limit: 50,
   },
