@@ -37,3 +37,11 @@ Thumbs.db
 *.tmp
 *.temp
 
+# BMAD and AI assistants
+.bmad/
+.claude/
+.cursor/
+docs/
+*.chatmode.md
+.github/
+
