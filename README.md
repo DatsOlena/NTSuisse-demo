@@ -56,6 +56,8 @@ npm run dev                # concurrently starts server (5001) and client (3000)
 Run individually if desired:
 ```bash
 cd server && npm run dev   # http://localhost:5001
+lsof -ti:5001 | xargs kill  # stops server
+
 cd client && npm run dev   # http://localhost:3000
 ```
 
@@ -107,4 +109,3 @@ Tests cover UI wiring (e.g., `Header`) and data logic (e.g., `useWaterMapData`).
 - sql.js keeps the database in memory and writes to `database.sqlite` after each mutation
 - If Socrata or RSS sources fail, the backend logs a warning and falls back gracefully
 - Tailwind warnings about `@tailwind` directives are expected unless stylelint is configured accordingly
-
