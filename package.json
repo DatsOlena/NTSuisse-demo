@@ -1,7 +1,7 @@
 {
-  "name": "ntsuisse-demo",
+  "name": "waterlab-demo",
   "version": "1.0.0",
-  "description": "NTSuisse Demo - React + TypeScript + Tailwind frontend with Node + Express + SQLite backend",
+  "description": "WaterLab Demo - React + TypeScript + Tailwind frontend with Node + Express + SQLite backend",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",

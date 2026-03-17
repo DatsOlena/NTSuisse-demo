@@ -174,7 +174,7 @@ async function fetchSocrataStationData(stationId) {
   const response = await fetch(requestUrl.toString(), {
     headers: {
       Accept: 'application/json',
-      'user-agent': 'WaterLab Demo / ntsuisse (contact: demo@example.com)',
+      'user-agent': 'WaterLab Demo (contact: demo@example.com)',
     },
   })
 

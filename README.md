@@ -1,11 +1,11 @@
-# WaterLab Demo (NTSuisse Mirror)
+# WaterLab Demo
 
-Modern full-stack showcase inspired by the Eawag / NTSuisse project. It combines a React + TypeScript + Tailwind UI with a Node.js + Express backend that serves local data, Swiss water analytics, and aggregated water news.
+Modern full-stack showcase combining a React + TypeScript + Tailwind UI with a Node.js + Express backend that serves local data, Swiss water analytics, and aggregated water news.
 
 ## Project Structure
 
 ```
-ntsuisse-demo/
+waterlab-demo/
 ├── client/          # React 18 + TypeScript + Tailwind frontend (Vite)
 └── server/          # Express backend with sql.js (SQLite) + external data routers
 ```

@@ -28,9 +28,9 @@ export default function About() {
           <div className="p-6 mb-6 backdrop-blur-sm">
             <h2 className="text-2xl font-bold mb-4 color-primary">Project Overview</h2>
             <p className="text-secondary mb-4">
-              WaterLab Demo is a full-stack showcase inspired by the Eawag / NTSuisse partnership. It pairs a modern
-              React + TypeScript interface with a modular Node.js backend to surface Swiss hydrological insights,
-              manage local research records, and curate water-sector news in one cohesive experience.
+              WaterLab Demo is a full-stack showcase project. It pairs a modern React + TypeScript interface with a
+              modular Node.js backend to surface Swiss hydrological insights, manage local research records, and curate
+              water-sector news in one cohesive experience.
             </p>
             <p className="text-secondary mb-4">
               The Dashboard blends live Basel Socrata feeds, FOEN fallbacks, and curated CSV snapshots into analytics
